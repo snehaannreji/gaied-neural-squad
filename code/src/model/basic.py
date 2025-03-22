@@ -61,12 +61,11 @@ def classify_email(text: str):
     formatted_response = extract_json_from_string(second_response)
     
     response_type = formatted_response['requestType']
-    print(response_type)
-    print(request_types)
+
     request_type_fields = [rt['fields'] for rt in request_types['requestType'] if rt['name'] == response_type][0]
     
     specific_fields_prompt = f'''
-        extract the given fields from the email: {request_type_fields}, return a json list in the following format: [
+        extract the given fields from the email: {request_type_fields}, also include any other fields you think might be relevant (do not create duplicate fields with similar values), return a json list in the following format: [
             {{
                 "field1Name": "field1Value",
                 "field2Name": "field2Value",
