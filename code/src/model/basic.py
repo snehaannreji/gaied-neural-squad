@@ -6,7 +6,7 @@ from langchain_community.llms import HuggingFaceEndpoint
 from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from huggingface_hub import login
 
-from model.types import request_types_str ,alternate_request_types
+from model.types import request_types, request_types_str, alternate_request_types
 
 HUGGINGFACEHUB_API_TOKEN = os.getenv('HUGGINGFACE_TOKEN')
 
@@ -53,12 +53,37 @@ def classify_email(text: str):
     
     print(f'## Prompting LLM ##')
     second_response: str = llm.invoke(conversation_history)
-    print(f'## LLM RESPONSE #2 (type: {type(second_response)}): {second_response} ##')
+    conversation_history.append(AIMessage(second_response))
+    print(f'## LLM RESPONSE #2: {second_response} ##')
     
     # formatted_response = second_response.removeprefix('AI\n```json\n').removesuffix('```')
     
-    
     formatted_response = extract_json_from_string(second_response)
+    
+    response_type = formatted_response['requestType']
+    print(response_type)
+    print(request_types)
+    request_type_fields = [rt['fields'] for rt in request_types['requestType'] if rt['name'] == response_type][0]
+    
+    specific_fields_prompt = f'''
+        extract the given fields from the email: {request_type_fields}, return a json list in the following format: [
+            {{
+                "field1Name": "field1Value",
+                "field2Name": "field2Value",
+            }}
+        ]
+    '''
+    
+    conversation_history.append(HumanMessage(specific_fields_prompt))
+    
+    print(f'## Prompting LLM ##')
+    third_response = llm.invoke(conversation_history)
+    conversation_history.append(AIMessage(third_response))
+    print(f'## LLM RESPONSE #3: {third_response} ##')
+    
+    request_field_values = extract_json_from_string(third_response)
+    
+    formatted_response['attributes'] = request_field_values
     
     return formatted_response
 
