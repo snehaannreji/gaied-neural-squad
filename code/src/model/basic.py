@@ -60,9 +60,11 @@ def classify_email(text: str):
     
     formatted_response = extract_json_from_string(second_response)
     
-    response_type = formatted_response['requestType']
+    request_type = formatted_response['requestType']
+    print(f'identified response type to be {request_type}')
 
-    request_type_fields = [rt['fields'] for rt in request_types['requestType'] if rt['name'] == response_type][0]
+    request_type_fields = [rt['fields'] for rt in request_types['requestType'] if compare_string_fuzzy(rt['name'], request_type)][0]
+    
     
     specific_fields_prompt = f'''
         extract the given fields from the email: {request_type_fields}, also include any other fields you think might be relevant (do not create duplicate fields with similar values), return a json list in the following format: [
@@ -85,6 +87,9 @@ def classify_email(text: str):
     formatted_response['attributes'] = request_field_values
     
     return formatted_response
+
+def compare_string_fuzzy(str1: str, str2: str):
+    return str1.replace(' ', '').lower() == str2.replace(' ', '').lower()
 
 def extract_json_from_string(text):
     """
