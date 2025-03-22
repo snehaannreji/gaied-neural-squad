@@ -20,15 +20,15 @@ llm = HuggingFaceEndpoint(
 def classify_email(text: str):
     ai_role_prompt = 'Remember that you are a banker working on email classification'
     
-    goal_prompt = """
+    goal_prompt = f'''
     You are given an email. Extract the main intent of the email.
 
-    Email:""" + text + """
+    Email:"""{text}"""
 
     Imagine you are a banker and working on these emails the bank has received. Your answers must be with respect to the bank. Identify the request type, sub request type, and intent of the email. The list of request types are given in the below json file - the subrequest is inside the request.
     Ensure that the request and sub request you are returning is found in the list.
-    """ + request_types_str + """
-    """
+    """{request_types_str}"""
+    '''
     conversation_history = [
         SystemMessage(ai_role_prompt),
         HumanMessage(goal_prompt),
@@ -39,7 +39,7 @@ def classify_email(text: str):
     conversation_history.append(AIMessage(first_response))
     print(f'## LLM RESPONSE #1: {first_response} ##')
     
-    follow_up_question = """
+    follow_up_question = '''
         give the final output as a json file with the fields "requestType", "subRequestType", "intent".
         For example: 
         {
@@ -48,15 +48,13 @@ def classify_email(text: str):
             "intent": "To change loan from branch Maine to Branch Oakland" 
         }
         Return only the json file, nothing else
-    """
+    '''
     conversation_history.append(HumanMessage(follow_up_question))
     
     print(f'## Prompting LLM ##')
     second_response: str = llm.invoke(conversation_history)
     conversation_history.append(AIMessage(second_response))
     print(f'## LLM RESPONSE #2: {second_response} ##')
-    
-    # formatted_response = second_response.removeprefix('AI\n```json\n').removesuffix('```')
     
     formatted_response = extract_json_from_string(second_response)
     
