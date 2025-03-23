@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from model.basic import classify_email
+from llm import classify_email
+from llm.models import all_models
 
 routes = APIRouter()
 
@@ -18,9 +19,10 @@ def analyze_email(email_text: EmailText):
     error = None
     
     try:
-        data = classify_email(email_text.email)
+        data = {name: classify_email(email_text.email, model) for name, model in all_models}
     except Exception as err:
         error = f"An error occurred: {err}"
+        print(err)
     
     return {
         "data": data,
