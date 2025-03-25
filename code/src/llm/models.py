@@ -42,10 +42,10 @@ login(HUGGINGFACEHUB_API_TOKEN)
 repo_ids = [
     'mistralai/Mistral-7B-Instruct-v0.2',
     # 'google/flan-t5-small',
-    # 'google/gemma-3-27b-it',
-    # 'Qwen/Qwen2.5-7B-Instruct'
+    'google/gemma-3-27b-it',
+    # 'Qwen/Qwen2.5-7B-Instruct',
 ]
 
 all_models = [
-    (id, LLMChat(InferenceClient(id, token=HUGGINGFACEHUB_API_TOKEN))) for id in repo_ids
+    (id, InferenceClient(id, token=HUGGINGFACEHUB_API_TOKEN)) for id in repo_ids
 ]

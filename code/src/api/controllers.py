@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from api.extract_email_content import extract_eml_content
 from llm import classify_email
-from llm.models import all_models
+from llm.models import LLMChat, all_models
 
 routes = APIRouter()
 
@@ -21,7 +21,7 @@ def analyze_email(email_text: EmailText):
     error = None
     
     try:
-        data = {name: classify_email(email_text.text, model) for name, model in all_models}
+        data = {name: classify_email(email_text.text, LLMChat(model)) for name, model in all_models}
     except Exception as err:
         error = f"An error occurred: {err}"
         print(err)
@@ -33,14 +33,13 @@ def analyze_email(email_text: EmailText):
 
 @routes.post("/analyze")
 async def upload_eml(file: UploadFile = File(...)):
-
     data = None
     error = None
     
     try:
         eml_bytes = await file.read()  # Read file content
         eml_data = extract_eml_content(BytesIO(eml_bytes))  # Extract content
-        data = {name: classify_email(eml_data['text'], model) for name, model in all_models}
+        data = {name: classify_email(eml_data['text'], LLMChat(model)) for name, model in all_models}
     except Exception as err:
         error = f"An error occurred: {err}"
         print(err)

@@ -7,7 +7,9 @@ from llm.types import request_types, request_types_str
 
 
 def classify_email(text: str, llm: LLMChat):
-    # ai_role_prompt = 'Remember that you are a banker working on email classification'
+    ai_role_prompt = 'Remember that you are a banker working on email classification'
+    
+    llm.add_system_message(ai_role_prompt);
     
     goal_prompt = f'''
     You are given an email. Extract the main intent of the email.
@@ -15,13 +17,18 @@ def classify_email(text: str, llm: LLMChat):
     Email:"""{text}"""
 
     Imagine you are a banker and working on these emails the bank has received. Your answers must be with respect to the bank. Identify the request type, sub request type, and intent of the email. The list of request types are given in the below json file - the subrequest is inside the request.
-    Ensure that the request and sub request you are returning is found in the list.
+    Ensure that the request and sub request you are returning is found in the list. Identify if there is an action item (asks to perform a request) or is simply a courtesy email. if the email is a courtesy email, just output 'duplicate: Yes'.
     """{request_types_str}"""
     '''
     
-    # llm.add_system_message(ai_role_prompt)
+    first_response = llm.prompt(goal_prompt)
     
-    llm.prompt(goal_prompt)
+    if 'duplicate: Yes' in first_response:
+        return {
+            "requestType":  "None",
+            "subRequestType": "None",
+            "duplicate": True
+        }
     
     follow_up_question = '''
         give the final output as a json file with the fields "requestType", "subRequestType", "intent".
