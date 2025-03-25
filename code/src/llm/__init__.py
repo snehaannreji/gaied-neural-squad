@@ -1,12 +1,13 @@
 from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from huggingface_hub import InferenceClient
 
+from llm.models import LLMChat
 from llm.utils import extract_json_from_string, compare_string_fuzzy
 from llm.types import request_types, request_types_str
 
 
-def classify_email(text: str, model: InferenceClient):
-    ai_role_prompt = 'Remember that you are a banker working on email classification'
+def classify_email(text: str, llm: LLMChat):
+    # ai_role_prompt = 'Remember that you are a banker working on email classification'
     
     goal_prompt = f'''
     You are given an email. Extract the main intent of the email.
@@ -18,8 +19,7 @@ def classify_email(text: str, model: InferenceClient):
     """{request_types_str}"""
     '''
     
-    llm = LLMChat(model)
-    llm.add_system_message(ai_role_prompt)
+    # llm.add_system_message(ai_role_prompt)
     
     llm.prompt(goal_prompt)
     
@@ -44,50 +44,22 @@ def classify_email(text: str, model: InferenceClient):
     request_type_fields = [rt['fields'] for rt in request_types['requestType'] if compare_string_fuzzy(rt['name'], request_type)][0]
     
     specific_fields_prompt = f'''
-        extract the given fields from the email: {request_type_fields}, also include any other fields you think might be relevant (do not create duplicate fields with similar values), return a single json list (if there are multiple lists, combine them and remove the duplicates) in the following format: [
-            {{
-                "field1Name": "field1Value",
-                "field2Name": "field2Value",
-            }}
-        ]
+        extract the given fields from the email: {request_type_fields}, also include any other fields you think might be relevant (do not create duplicate fields with similar values), return a single json list (if there are multiple lists, combine them and remove the duplicates) in the following format (make sure there are no sub-object fields): 
+                {{
+                    "field1Name": "field1Value",
+                    "field2Name": "field2Value",
+                }}
     '''
     
     third_response = llm.prompt(specific_fields_prompt)
     
     request_field_values = extract_json_from_string(third_response)
     
+    print("*******************************************************************************")
+    print(formatted_response)
+    print(third_response)
+    print(request_field_values)
+    
     formatted_response['attributes'] = request_field_values
     
     return formatted_response
-
-class LLMChat:
-    def __init__(self, llm: InferenceClient):
-        self.llm = llm
-        self.chat_history = []
-        self.user_message_count = 0
-    
-    def add_system_message(self, message: str):
-        self.chat_history.append({"role": "system", "content": message})
-    
-    def __add_user_message(self, message: str):
-        self.chat_history.append({"role": "user", "content": message})
-        
-    def __add_assistant_message(self, message: str):
-        self.chat_history.append({"role": "assistant", "content": message})
-        
-    def prompt(self, prompt: str) -> str:
-        self.user_message_count += 1
-        self.__add_user_message(prompt)
-        print(f'prompt type: {type(prompt)}')
-        print(f'-   PROMPT #{self.user_message_count}: {self.chat_history[-1]['content'][1:100]}...')
-        chat_completion_output = self.llm.chat_completion(
-            messages=self.chat_history,
-            max_tokens=1024,
-            temperature=0.001
-        )
-        response = chat_completion_output.choices[0].message.content
-        print(f'- RESPONSE #{self.user_message_count}: {response}')
-        
-        self.__add_assistant_message(response)
-        
-        return response
