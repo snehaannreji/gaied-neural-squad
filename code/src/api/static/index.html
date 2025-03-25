@@ -18,6 +18,9 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+        .card:nth-child(0) {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -59,7 +62,7 @@
                         outputDiv.innerHTML += `<h2>${model_name}</h2>`;
                         if (model_output.duplicate) {
                             outputDiv.innerHTML += "This file can be ignored.";
-                            return;
+                            continue;
                         }
                         outputDiv.innerHTML += `<div class="card"><div>Request Type</div> <div>${model_output.requestType}</div></div>`;
                         outputDiv.innerHTML += `<div class="card"><div>Sub Request Type</div> <div>${model_output.subRequestType}</div></div>`;

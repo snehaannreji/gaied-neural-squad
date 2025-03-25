@@ -4,15 +4,6 @@ from email import policy
 from email.parser import BytesParser
 
 def extract_eml_content(file_obj: io.BytesIO):
-    """
-    Extracts text content and attachments from an in-memory .eml file object.
-
-    Args:
-        file_obj (io.BytesIO): The uploaded .eml file as an in-memory file object.
-
-    Returns:
-        dict: Contains 'text' (email body) and 'attachments' (list of tuples with filename and file content).
-    """
     # Parse the email file from memory
     msg = BytesParser(policy=policy.default).parse(file_obj)
 

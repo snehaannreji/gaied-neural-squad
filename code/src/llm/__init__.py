@@ -5,11 +5,14 @@ from llm.models import LLMChat
 from llm.utils import extract_json_from_string, compare_string_fuzzy
 from llm.types import request_types, request_types_str
 
-
-def classify_email(text: str, llm: LLMChat):
+def classify_email(text: str, attachments: list[str], llm: LLMChat):
+    # merging the attachemnts into the email text
+    for filename, filetext in attachments:
+        text += '\n' + filetext
+        
     ai_role_prompt = 'Remember that you are a banker working on email classification'
     
-    llm.add_system_message(ai_role_prompt);
+    llm.add_system_message(ai_role_prompt)
     
     goal_prompt = f'''
     You are given an email. Extract the main intent of the email.

@@ -39,7 +39,7 @@ async def upload_eml(file: UploadFile = File(...)):
     try:
         eml_bytes = await file.read()  # Read file content
         eml_data = extract_eml_content(BytesIO(eml_bytes))  # Extract content
-        data = {name: classify_email(eml_data['text'], LLMChat(model)) for name, model in all_models}
+        data = {name: classify_email(eml_data['text'], eml_data['attachments'], LLMChat(model)) for name, model in all_models}
     except Exception as err:
         error = f"An error occurred: {err}"
         print(err)
